@@ -194,7 +194,7 @@ local function buildDesign(worldName)
                 local itemInfo = getItemByID(itemID); local existingTile = checkTile(x, y)
                 local extraTi = getExtraTile(x, y)
                 local isForegroundBlock = (itemInfo.collisionType > 0)
-                if (isForegroundBlock and updatedTile.fg == itemID) or (not isForegroundBlock and updatedTile.bg == itemID) or (extraTi.valid and (extraTi.glue or extraTi.water or parse_paint(existingTile.flag))) then goto continue end
+                if (isForegroundBlock and existingTile.fg == itemID) or (not isForegroundBlock and existingTile.bg == itemID) or (extraTi.valid and (extraTi.glue or extraTi.water or parse_paint(existingTile.flag))) then goto continue end
                 local hasNotified = false
                 while getItemCount(itemID) < 1 do
                     if not hasNotified then
