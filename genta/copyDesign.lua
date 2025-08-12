@@ -1,4 +1,3 @@
-
 local delayPut = 300
 local delayTp = 400
 
@@ -309,7 +308,7 @@ function help()
         {"/design <world>", "Starts building a design."}, {"/list", "Shows all saved designs."},
         {"/stop", "Stops the build process."}, {"/pause", "Pauses the current build."},
         {"/resume", "Resumes a paused build."}, {"/delete <world>", "Opens a dialog to delete items."}, {"/deletedesign", "Delete the copied world"},
-        {"/help", "Shows this help dialog."}
+        {"/help", "Shows this help dialog."}, {"/delaytp <ms> & delayput <ms>", "Set the delay as you like"}
     }
     for _, cmd in ipairs(commands) do
         dialog:addlabel(true, {label=string.format("`6%s `o- %s", cmd[1], cmd[2]), id=2412})
@@ -436,6 +435,7 @@ local function commandHook(type, pkt)
           return true
       end
   end
+  
   if pkt:find("action|input\n|text|/") then
     local text = pkt:gsub("action|input\n|text|", ""); local parts = split(text, " ")
     local command = parts[1]; local worldName = parts[2]
@@ -455,25 +455,18 @@ local function commandHook(type, pkt)
     elseif command == "/deletedesign" then if not worldName then logToConsole("`4 Usage: `o/delete <world_name>") return true end
     deleteDesign(worldName); return true
     elseif command == "/help" then help(); return true
+    elseif command == "/delayput" then
+      if not worldName then logToConsole("`4Usage: `o/delayput <milisecond>") return true end
+      delayPut = worldName
+      logToConsole("The delay for the put Block has been set to: "..delayPut.."ms. Default: 300ms")
+      return true
+    elseif command == "/delaytp" then
+      if not worldName then logToConsole("`4Usage: `o/delaytp <milisecond>") return true end
+      delayTp = worldName
+      logToConsole("The delay for teleport has been set to: "..delayTp.."ms. Default: 400ms")
+      return true
     end
   end
 end
 
 AddHook("OnTextPacket", "kntlkuda", commandHook)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
