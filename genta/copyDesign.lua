@@ -206,7 +206,8 @@ local function buildDesign(worldName)
                     local placement_confirmed = false; local timeSpent = 0; local timeout = 3000
                     while timeSpent < timeout do
                         local updatedTile = checkTile(x, y)
-                        if (isForegroundBlock and updatedTile.fg == itemID) or (not isForegroundBlock and updatedTile.bg == itemID) then
+                        local extraT = getExtraTile(x, y)
+                        if (isForegroundBlock and updatedTile.fg == itemID) or (not isForegroundBlock and updatedTile.bg == itemID) or (extraT.valid and (extraT.glue or extraT.water or parse_paint(updatedTile.flag))) then
                             placement_confirmed = true; break 
                         end
                         sleep(100); timeSpent = timeSpent + 100
