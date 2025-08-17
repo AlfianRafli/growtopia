@@ -5,7 +5,6 @@ local os = require("os")
 local BUILD_THREAD_LABEL = "DesignBuilderThread"
 _G.isPaused = false
 
--- Load Dialog Builder Ihkaz
 local ihkaz_loader_code, err = makeRequest("https://raw.githubusercontent.com/ihkaz/GT-Dialog-Builder-in-lua/refs/heads/main/DialogBuilder.lua", "GET")
 if not ihkaz_loader_code or not ihkaz_loader_code.content or ihkaz_loader_code.content == "" then
     logToConsole("`4FATAL ERROR: `oCould not load Ihkaz Dialog Builder from GitHub!")
@@ -179,21 +178,31 @@ local function buildDesign(worldName)
     local filePath = "/storage/emulated/0/android/media/GENTAHAX/design/"..worldName:upper()..".txt"
     local file = io.open(filePath, "r"); if not file then return end
     local lines = split(file:read("*all"), "\n"); file:close()
+    
     logToConsole("`2Starting construction for world: `o" .. worldName)
+    
     for i, line in ipairs(lines) do
         local hasNotifiedPause = false
         while _G.isPaused do
             if not hasNotifiedPause then logToConsole("`6Build is paused..."); hasNotifiedPause = true end; sleep(1000)
         end
         if hasNotifiedPause then logToConsole("`2Resuming...") end
+        
         if line ~= "" then
             local parts = split(line, "|")
             local itemID, x, y = tonumber(parts[1]), tonumber(parts[2]), tonumber(parts[3])
+
             if itemID and x and y then
-                local itemInfo = getItemByID(itemID); local existingTile = checkTile(x, y)
-                local extraTi = getExtraTile(x, y)
+                local itemInfo = getItemByID(itemID)
+                local existingTile = checkTile(x, y)
                 local isForegroundBlock = (itemInfo.collisionType > 0)
-                if (isForegroundBlock and existingTile.fg == itemID) or (not isForegroundBlock and existingTile.bg == itemID) or (extraTi.valid and (extraTi.glue or extraTi.water or parse_paint(existingTile.flag))) then goto continue end
+                
+                local isActionItem = (itemID == 1866 or itemID == 822 or (itemID >= 3478 and itemID <= 3490))
+
+                if not isActionItem and ((isForegroundBlock and existingTile.fg == itemID) or (not isForegroundBlock and existingTile.bg == itemID)) then
+                    goto continue
+                end
+
                 local hasNotified = false
                 while getItemCount(itemID) < 1 do
                     if not hasNotified then
@@ -201,24 +210,46 @@ local function buildDesign(worldName)
                     end; sleep(2500)
                 end
                 if hasNotified then logToConsole("`2Material detected! `oResuming construction...") end
+                
                 if findPathToPlace(x, y) then
-                    sleep(300); sleep(delayPut); requestTileChange(x, y, itemID)
-                    local placement_confirmed = false; local timeSpent = 0; local timeout = 3000
+                    sleep(300)
+                    sleep(delayPut)
+                    requestTileChange(x, y, itemID)
+                    
+                    local placement_confirmed = false
+                    local timeSpent = 0
+                    local timeout = 5000
+                    
                     while timeSpent < timeout do
                         local updatedTile = checkTile(x, y)
-                        local extraT = getExtraTile(x, y)
-                        if (isForegroundBlock and updatedTile.fg == itemID) or (not isForegroundBlock and updatedTile.bg == itemID) or (extraT.valid and (extraT.glue or extraT.water or parse_paint(updatedTile.flag))) then
-                            placement_confirmed = true; break 
+                        local flagsInfo = updatedTile.getFlags
+                        
+                        local success = false
+                        if itemID == 1866 and flagsInfo.glue then success = true -- Cek lem
+                        elseif itemID == 822 and flagsInfo.water then success = true -- Cek air
+                        elseif isActionItem and parse_paint(updatedTile.flags) == itemID then success = true -- Cek cat
+                        elseif not isActionItem and isForegroundBlock and updatedTile.fg == itemID then success = true -- Cek FG
+                        elseif not isActionItem and not isForegroundBlock and updatedTile.bg == itemID then success = true -- Cek BG
                         end
-                        sleep(100); timeSpent = timeSpent + 100
+
+                        if success then
+                            placement_confirmed = true
+                            break 
+                        end
+                        sleep(100)
+                        timeSpent = timeSpent + 100
                     end
+                    
                     if placement_confirmed then
                         sleep(delayTp)
                         local remainingContent = ""
-                        for j = i + 1, #lines do if lines[j] ~= "" then remainingContent = remainingContent .. lines[j] .. "\n" end end
-                        local fileToWrite = io.open(filePath, "w"); if fileToWrite then fileToWrite:write(remainingContent); fileToWrite:close() end
+                        for j = i + 1, #lines do
+                            if lines[j] ~= "" then remainingContent = remainingContent .. lines[j] .. "\n" end
+                        end
+                        local fileToWrite = io.open(filePath, "w")
+                        if fileToWrite then fileToWrite:write(remainingContent); fileToWrite:close() end
                     else
-                        logToConsole("`4Warning: `oTile update timeout at ("..x..", "..y.."). Will retry.")
+                        logToConsole("`4Warning: `oTile update timeout at ("..x..", "..y..") for item ID "..itemID..". Will retry on next run.")
                     end
                 else
                     logToConsole("`4Skipping: `oCould not find path to place block at ("..x..", "..y..")")
@@ -227,6 +258,7 @@ local function buildDesign(worldName)
         end
         ::continue::
     end
+
     local fileCheck = io.open(filePath, "r")
     if fileCheck then
         local content = fileCheck:read("*a"); fileCheck:close()
@@ -255,10 +287,10 @@ function copy()
   
   local output = ""
   for _, tile in ipairs(getTile()) do
+    if tile.bg ~= 0 then output = output .. string.format("%d|%d|%d", tile.bg, tile.pos.x, tile.pos.y) .. "\n" end
     if tile.fg ~= 0 and tile.fg ~= 8 and tile.fg ~= 6 and tile.fg ~= 242 and tile.fg ~= 3760 then
       output = output .. string.format("%d|%d|%d", tile.fg, tile.pos.x, tile.pos.y) .. "\n"
     end
-    if tile.bg ~= 0 then output = output .. string.format("%d|%d|%d", tile.bg, tile.pos.x, tile.pos.y) .. "\n" end
     if tile.getFlags.water then output = output .. string.format("%d|%d|%d", 822, tile.pos.x, tile.pos.y) .. "\n" end
     if tile.getFlags.glue then output = output .. string.format("%d|%d|%d", 1866, tile.pos.x, tile.pos.y) .. "\n" end
     local paint = parse_paint(tile.flags)
