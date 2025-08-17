@@ -218,7 +218,7 @@ local function buildDesign(worldName)
                     
                     local placement_confirmed = false
                     local timeSpent = 0
-                    local timeout = 5000
+                    local timeout = 3000
                     
                     while timeSpent < timeout do
                         local updatedTile = checkTile(x, y)
