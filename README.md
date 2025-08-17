@@ -3,6 +3,7 @@
 ## Copy Design for Genta
 
 | Feature  | Support |
+| ------------- | ------------- |
 | Glue  | ✅  |
 | Water  | ✅  |
 | Paint | ✅ ( Need Paintbrush equipped ) |
