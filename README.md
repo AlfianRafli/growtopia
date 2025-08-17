@@ -4,8 +4,8 @@
 
 | Feature  | Support |
 | ------------- | ------------- |
-| Glue  | ✅  |
-| Water  | ✅  |
-| Paint | ✅ ( Need Paintbrush equipped ) |
-| Items in Display Shelf | ❌ |
-| Items in Display Block | ❌ |
+| Glue  | Yes. |
+| Water  | Yes.  |
+| Paint | Yes. ( Need Paintbrush equipped ) |
+| Items in Display Shelf | No. |
+| Items in Display Block | No. |
