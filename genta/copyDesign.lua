@@ -278,12 +278,11 @@ function buildDesign(worldName)
                  then
                     goto continue
                 end
-                if getItemCount(itemID) < 1 then
+                while getItemCount(itemID) < 1 do
                     logToConsole("`4Paused: `oOut of `2" .. itemInfo.name)
                     doToast(2, 3000, "Out of Material!")
                     _G.isPaused = true
-                    return false
-                    
+                    sleep(2500)
                 end
                 if findPathToPlace(x, y) then
                     sleep(300)
@@ -850,5 +849,3 @@ end
 
 AddHook("OnVarlist", "v", varlist)
 AddHook("OnTextPacket", "y", commandHook)
-
-
